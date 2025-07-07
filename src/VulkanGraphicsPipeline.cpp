@@ -148,10 +148,10 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline(VkPhysicalDevice physicalDevice, 
 #if defined(__IPHONE_OS_VERSION_MIN_REQUIRED)
 	std::string basePath = SDL_GetBasePath(); // Returns the app bundle's Resources path
 	auto vertShaderCode = readFile(basePath + "/" + vertShaderFile);
-	auto fragShaderCode = readFile(basePath + "/box.frag.spv");
+	auto fragShaderCode = readFile(basePath + "/" + fragShaderFile);
 #elif defined (__ANDROID__)
 	auto vertShaderCode = readFile(vertShaderFile);
-	auto fragShaderCode = readFile("box.frag.spv");
+	auto fragShaderCode = readFile(fragShaderFile);
 #else
 	std::string currentFilePath = __FILE__;
 
@@ -168,7 +168,7 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline(VkPhysicalDevice physicalDevice, 
 	std::string rootDir = srcDir.substr(0, pos);
 	// Load shader binary. Very much platform or development environment dependent
 	auto vertShaderCode = readFile(rootDir + "/shaderBinary/" + vertShaderFile);
-	auto fragShaderCode = readFile(rootDir + "/shaderBinary/box.frag.spv");
+	auto fragShaderCode = readFile(rootDir + "/shaderBinary/" + fragShaderFile);
 #endif
 
 
