@@ -36,8 +36,10 @@ public:
 	std::vector<VkCommandBuffer> frameCmdBuffers; // Command buffer storing the dispatch commands and barriers
 	void buildCommandBuffers(VulkanSwapChain* swapChainX,
         VkPipelineLayout uberPipelineLayout, VkDescriptorSet uberDescSet,
-        VulkanGraphicsPipeline* graphicsPipelineX,
-        VkBuffer vertexBuffer, VkBuffer indexBuffer, uint32_t indexCount);
+        const std::vector<VulkanGraphicsPipeline*>& graphicsPipelinesX,
+        const std::vector<VkBuffer>& vertexBuffers, 
+        const std::vector<VkBuffer>& inIndexBuffers, 
+        const std::vector<uint32_t>& indexCounts);
     PFN_vkCmdBeginRenderingKHR vkCmdBeginRenderingKHR{ VK_NULL_HANDLE };
     PFN_vkCmdEndRenderingKHR vkCmdEndRenderingKHR{ VK_NULL_HANDLE };
     PFN_vkCmdPipelineBarrier2 vkCmdPipelineBarrier2KHR{ VK_NULL_HANDLE };

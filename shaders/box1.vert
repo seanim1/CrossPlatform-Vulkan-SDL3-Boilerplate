@@ -15,7 +15,7 @@ float wavy(float x) {
 void main() {
 
     vec2 aspectRatio = vec2(SCREEN_WIDTH / float(SCREEN_HEIGT), 1.);
-    gl_Position = ubo.proj * ubo.view * ubo.models[0] * vec4(inPosition, 1.0);
+    gl_Position = ubo.proj * ubo.view * ubo.models[1] * vec4(inPosition, 1.0);
     fragColor = hsv2rgb_smooth(Vec3T(ubo.elapsedTime * 0.3 + inHue , 1., 1.));
 }
 

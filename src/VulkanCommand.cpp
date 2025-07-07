@@ -36,8 +36,10 @@ static void init_vkDependencyInfo(VkDependencyInfo* dependencyInfoAddress) {
 
 void VulkanCommand::buildCommandBuffers(VulkanSwapChain* swapChainX,
     VkPipelineLayout uberPipelineLayout, VkDescriptorSet uberDescSet,
-    VulkanGraphicsPipeline* graphicsPipelineX, 
-    VkBuffer vertexBuffer, VkBuffer indexBuffer, uint32_t indexCount)
+    const std::vector<VulkanGraphicsPipeline*>& graphicsPipelinesX,
+    const std::vector<VkBuffer>& inVertexBuffers,
+    const std::vector<VkBuffer>& inIndexBuffers,
+    const std::vector<uint32_t>& indexBufferCounts)
 {
     VkImageSubresourceRange subresourceRange_default;
     subresourceRange_default.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -91,8 +93,8 @@ void VulkanCommand::buildCommandBuffers(VulkanSwapChain* swapChainX,
 
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = graphicsPipelineX->renderPass;
-        renderPassInfo.framebuffer = graphicsPipelineX->swapChainFramebuffers[swapChainImageIndex];
+        renderPassInfo.renderPass = graphicsPipelinesX[0]->renderPass;
+        renderPassInfo.framebuffer = graphicsPipelinesX[0]->swapChainFramebuffers[swapChainImageIndex];
         renderPassInfo.renderArea.offset = { 0, 0 };
         renderPassInfo.renderArea.extent = swapChainX->swapChainExtent;
 
@@ -107,15 +109,16 @@ void VulkanCommand::buildCommandBuffers(VulkanSwapChain* swapChainX,
 
         vkCmdBeginRenderPass(frameCommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdBindPipeline(frameCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipelineX->graphicsPipeline);
-
-
-        VkBuffer vertexBuffers[] = { vertexBuffer };
-        VkDeviceSize offsets[] = { 0 };
-        vkCmdBindVertexBuffers(frameCmdBuffers[swapChainImageIndex], 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(frameCmdBuffers[swapChainImageIndex], indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-        
-        vkCmdDrawIndexed(frameCmdBuffers[swapChainImageIndex], indexCount, 1, 0, 0, 0);
+        for (int i = 0; i < indexBufferCounts.size(); i++) {
+            vkCmdBindPipeline(frameCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                graphicsPipelinesX[i]->graphicsPipeline);
+            VkBuffer vertexBuffer[] = { inVertexBuffers.data()[i] };
+            VkDeviceSize offsets[] = { 0 };
+            vkCmdBindVertexBuffers(frameCmdBuffers[swapChainImageIndex], 0,
+                1, vertexBuffer, offsets);
+            vkCmdBindIndexBuffer(frameCmdBuffers[swapChainImageIndex], inIndexBuffers[i], 0, VK_INDEX_TYPE_UINT32);
+            vkCmdDrawIndexed(frameCmdBuffers[swapChainImageIndex], indexBufferCounts[i], 1, 0, 0, 0);
+        }
 
         vkCmdDraw(frameCommandBuffer, 3, 1, 0, 0);
 
