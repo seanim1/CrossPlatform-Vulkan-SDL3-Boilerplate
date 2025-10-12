@@ -66,7 +66,7 @@ VkShaderModule VulkanGraphicsPipeline::createShaderModule(const std::vector<char
 
 VulkanGraphicsPipeline::VulkanGraphicsPipeline(VkPhysicalDevice physicalDevice, VkDevice logicalDevice,
 	VulkanSwapChain* swapChainX, VkSurfaceFormatKHR selectedSurfaceFormat,
-	VkPipelineLayout uberPipelineLayout, Geometry* geometry,
+	VkPipelineLayout uberPipelineLayout, VkPrimitiveTopology primitiveTopology, Geometry* geometry,
 	VkSpecializationInfo specializationInfo,
 	const std::string& vertShaderFile, const std::string& fragShaderFile)
 {
@@ -203,7 +203,7 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline(VkPhysicalDevice physicalDevice, 
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	inputAssembly.topology = primitiveTopology;
 	inputAssembly.primitiveRestartEnable = VK_FALSE;
 
 	// We either need this or define it in the pDynamicState, but one of them is required

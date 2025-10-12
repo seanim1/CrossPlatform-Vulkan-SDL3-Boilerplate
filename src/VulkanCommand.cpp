@@ -39,7 +39,7 @@ void VulkanCommand::buildCommandBuffers(VulkanSwapChain* swapChainX,
     const std::vector<VulkanGraphicsPipeline*>& graphicsPipelinesX,
     const std::vector<VkBuffer>& inVertexBuffers,
     const std::vector<VkBuffer>& inIndexBuffers,
-    const std::vector<uint32_t>& indexBufferCounts)
+    const std::vector<uint32_t>& inIndexBufferCounts)
 {
     VkImageSubresourceRange subresourceRange_default;
     subresourceRange_default.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -109,7 +109,7 @@ void VulkanCommand::buildCommandBuffers(VulkanSwapChain* swapChainX,
 
         vkCmdBeginRenderPass(frameCommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        for (int i = 0; i < indexBufferCounts.size(); i++) {
+        for (int i = 0; i < inIndexBufferCounts.size(); i++) {
             vkCmdBindPipeline(frameCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                 graphicsPipelinesX[i]->graphicsPipeline);
             VkBuffer vertexBuffer[] = { inVertexBuffers.data()[i] };
@@ -117,7 +117,7 @@ void VulkanCommand::buildCommandBuffers(VulkanSwapChain* swapChainX,
             vkCmdBindVertexBuffers(frameCmdBuffers[swapChainImageIndex], 0,
                 1, vertexBuffer, offsets);
             vkCmdBindIndexBuffer(frameCmdBuffers[swapChainImageIndex], inIndexBuffers[i], 0, VK_INDEX_TYPE_UINT32);
-            vkCmdDrawIndexed(frameCmdBuffers[swapChainImageIndex], indexBufferCounts[i], 1, 0, 0, 0);
+            vkCmdDrawIndexed(frameCmdBuffers[swapChainImageIndex], inIndexBufferCounts[i], 1, 0, 0, 0);
         }
 
         vkCmdDraw(frameCommandBuffer, 3, 1, 0, 0);

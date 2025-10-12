@@ -36,7 +36,7 @@ private:
 public:
 	VulkanGraphicsPipeline(VkPhysicalDevice physicalDevice, VkDevice logicalDevice,
 		VulkanSwapChain* swapChainX, VkSurfaceFormatKHR selectedSurfaceFormat,
-		VkPipelineLayout uberPipelineLayout, Geometry* geometry,
+		VkPipelineLayout uberPipelineLayout, VkPrimitiveTopology primitiveTopology, Geometry* geometry,
 		VkSpecializationInfo specializationInfo,
 		const std::string& vertShaderFile, const std::string& fragShaderFile);
 	VkPipeline graphicsPipeline;

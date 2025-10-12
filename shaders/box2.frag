@@ -15,14 +15,6 @@ vec3 colorGradient( in float t, in vec3 b, in vec3 c, in vec3 d )
 
 void main() {
     //debugPrintfEXT("uv: %v2f, frag: %v2f, scrn: %v2i\n", uv, gl_FragCoord.xy, SCREEN_DIM);
-    
-    // Step 1: Reconstruct world-space ray
-    // Normalized pixel coordinates (from 0 to 1)
-    // Inverse matrices
-    mat4 invView = inverse(ubo.view);
-    mat4 invProj = inverse(ubo.proj);
-    mat4 invModel = inverse(ubo.models[1]);
-
 
     // Reconstruct ray in world space
     vec2 uv = gl_FragCoord.xy / SCREEN_DIM;

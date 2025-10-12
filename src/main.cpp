@@ -1,4 +1,4 @@
-    #define SDL_MAIN_USE_CALLBACKS 1
+   #define SDL_MAIN_USE_CALLBACKS 1
 
 #include "Global.h"
 #include "GameWindow.h"
@@ -7,7 +7,10 @@
 #include "GameInput.h"
 #include "GameTimer.h"
 
+#include "GeometryLine.h"
 #include "GeometryBox.h"
+#include "GeometryQuad.h"
+#include "GeometryGrid.h"
 
 #include <glm/glm.hpp>
 #include <SDL3/SDL.h>
@@ -61,8 +64,12 @@ static VulkanCommand* cmdX = nullptr;
 static VulkanSwapChain* swapChainX = nullptr;
 static std::vector<VulkanDesc*> descriptorList;
 
+// TICKET: figure out why the third Geo is being rendered so strangily
+constexpr size_t GEO_CNT = 3; 
+// this struct maps to Global.comp's layout(std430, binding = 0) uniform UniformBufferObject.
+// I also hardcoded the 
 struct CameraMatrices {
-	glm::mat4 models[2];
+	glm::mat4 models[GEO_CNT]; // this array size must be updated accordingly in Global.comp
 	glm::mat4 view;
 	glm::mat4 proj;
 
@@ -76,7 +83,11 @@ struct CameraMatrices {
 	float padding_1;
 };
 static CameraMatrices cam;
+static std::vector<Geometry*> geos;
+static std::vector<Line*> lines;
 static std::vector<Box*> boxes;
+static std::vector<Quad*> quads;
+static std::vector<Grid*> grids;
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     gWindow = new GameWindow(1280, 720, "Cross-Platform GUI");
@@ -136,20 +147,20 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 	swapChainX = new VulkanSwapChain(physicalDeviceX->physicalDevice, instanceX->surface, deviceX->logicalDevice);
 	cmdX = new VulkanCommand(deviceX->logicalDevice, queueX->queueFamilyIndex, (uint32_t) swapChainX->swapChainImages.size());
 	syncX = new VulkanSynchronization(deviceX->logicalDevice);
-
-	boxes.push_back(new Box(1.7f, 1.7f, 1.7f) );
-	boxes.push_back(new Box(2.f, 2.f, 2.f) );
-	
+	//geos.push_back(new Quad(2.f, 2.f));
+	geos.push_back(new Box(1.7f, 1.7f, 1.7f));
+	geos.push_back(new Box(1.7f, 1.7f, 1.7f) );
+	geos.push_back(new Quad(2.f, 2.f));
 	/* <Instantiate descriptorList>
 	* descriptorList: [ uniformBuffer | Box 0 Vertex Buffer | Box 0 Index Buffer | Box 1 Vertex Buffer | Box 1 Index Buffer | ... ]
 	*/
 	descriptorList.push_back( new VulkanDescBufferUniform(&cam, sizeof(cam), deviceX->logicalDevice, physicalDeviceX->physicalDevice));
-	for (int i = 0; i < boxes.size(); i++) {
+	for (int i = 0; i < geos.size(); i++) {
 		descriptorList.push_back(new VulkanDescBuffer(deviceX->logicalDevice, physicalDeviceX->physicalDevice,
-			boxes[i]->getVertexData(), boxes[i]->getVertexCount() * boxes[i]->getVertexStride(),
+			geos[i]->getVertexData(), geos[i]->getVertexCount() * geos[i]->getVertexStride(),
 			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT | VK_SHADER_STAGE_VERTEX_BIT));
 		descriptorList.push_back(new VulkanDescBuffer(deviceX->logicalDevice, physicalDeviceX->physicalDevice,
-			boxes[i]->getIndexData(), boxes[i]->getIndexCount() * sizeof(boxes[i]->getIndexData()[0]),
+			geos[i]->getIndexData(), geos[i]->getIndexCount() * sizeof(geos[i]->getIndexData()[0]),
 			VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_COMPUTE_BIT));
 	}
 
@@ -172,19 +183,25 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 	std::vector<VulkanGraphicsPipeline*> graphicsPipelines;
 	graphicsPipelines.push_back(new VulkanGraphicsPipeline(physicalDeviceX->physicalDevice, deviceX->logicalDevice,
 		swapChainX, swapChainX->selectedSurfaceFormat,
-		descriptorX->uberPipelineLayout, boxes[0],
+		descriptorX->uberPipelineLayout, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, geos[0],
 		specialConstantX->specializationInfo,
 		"box.vert.spv", "box.frag.spv"));
 
 	graphicsPipelines.push_back(new VulkanGraphicsPipeline(physicalDeviceX->physicalDevice, deviceX->logicalDevice,
 		swapChainX, swapChainX->selectedSurfaceFormat,
-		descriptorX->uberPipelineLayout, boxes[1],
+		descriptorX->uberPipelineLayout, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, geos[1],
 		specialConstantX->specializationInfo,
 		"box1.vert.spv", "box1.frag.spv"));
 
+	graphicsPipelines.push_back(new VulkanGraphicsPipeline(physicalDeviceX->physicalDevice, deviceX->logicalDevice,
+		swapChainX, swapChainX->selectedSurfaceFormat,
+		descriptorX->uberPipelineLayout, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, geos[2],
+		specialConstantX->specializationInfo,
+		"box2.vert.spv", "box2.frag.spv"));
+
 	/*	<Initialize vertex buffer>
 	*	<Initialize index buffer>
-	*	The following three buffers are guaranteed to be of same size, same size as the boxes[].
+	*	The following three buffers are guaranteed to be of same size, same size as the geos[].
 	*/
 	std::vector<VkBuffer> vertexBuffers;
 	std::vector<VkBuffer> indexBuffers;
@@ -198,7 +215,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 		}
 		else if ((bufferUsageFlags & VK_BUFFER_USAGE_INDEX_BUFFER_BIT) == VK_BUFFER_USAGE_INDEX_BUFFER_BIT) {
 			indexBuffers.push_back(descriptor->buffer);
-			indexBufferCounts.push_back(boxes[counter_for_nextIndexBuffer]->getIndexCount());
+			indexBufferCounts.push_back(geos[counter_for_nextIndexBuffer]->getIndexCount());
 			counter_for_nextIndexBuffer++;
 		}
 	}
@@ -224,17 +241,27 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
 SDL_AppResult SDL_AppIterate(void* appstate) {
     gTimer->StartTimer();
     gInput->Update(gCamera);
-	boxes[0]->setRotation(glm::vec3(5., gTimer->elapsedTime * 0.1, 0.1));
-	//boxes[0]->setScale(glm::vec3(0.4 * cos(gTimer->elapsedTime) + 1.2));
-	boxes[0]->setPosition(glm::vec3(0.3 * sin(gTimer->elapsedTime), 0.3 * sin(gTimer->elapsedTime), -1.));
-	//boxes[0]->setPosition(glm::vec3(0.01, 0., 0.));
-	boxes[1]->setRotation(glm::vec3(gTimer->elapsedTime * 0.1, 0.2, 0.1));
-	//boxes[1]->setPosition(glm::vec3(2., 0.3 * sin(gTimer->elapsedTime), 0.3 * sin(gTimer->elapsedTime)));
-	boxes[1]->setPosition(glm::vec3(0., 0., 3.));
+	geos[0]->setRotation(glm::vec3(5. * sin(gTimer->elapsedTime), 0.3 * sin(gTimer->elapsedTime), -1.));
+	//geos[0]->setScale(glm::vec3(0.4 * cos(gTimer->elapsedTime) + 1.2));
+	//geos[0]->setPosition(glm::vec3(0.01, 0., 0.));
+	geos[1]->setRotation(glm::vec3(gTimer->elapsedTime * 0.1, 0.2, 0.1));
+	//geos[1]->setPosition(glm::vec3(2., 0.3 * sin(gTimer->elapsedTime), 0.3 * sin(gTimer->elapsedTime)));
+	geos[0]->setPosition(glm::vec3(2., 0., 3.));
+	geos[1]->setPosition(glm::vec3(0., 0., 3.));
+	geos[2]->setPosition(glm::vec3(0., 0., 0.));
+	glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f); // Assuming Y is up
+	glm::mat4 lookMatrix = glm::lookAt(
+		cam.camPos,  // Position of the "Camera" (i.e., the Object)
+		geos[2]->getPosition(),    // Point the "Camera" is looking at
+		worldUp          // World's up direction
+	);
+	geos[2]->setRotation(glm::vec3(0., 3.14, 0.));
+
 
 #ifdef USE_GPU
-	cam.models[0] = boxes[0]->getModelMatrix();
-	cam.models[1] = boxes[1]->getModelMatrix();
+	for (int i = 0; i < GEO_CNT; i++) {
+		cam.models[i] = geos[i]->getModelMatrix();
+	}
 	cam.view = gCamera->GetViewMatrix();
 	cam.proj = gCamera->GetProjectionMatrix();
 	cam.camPos = gCamera->GetPosition();

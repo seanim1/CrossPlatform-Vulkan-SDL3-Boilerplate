@@ -53,9 +53,8 @@ layout(constant_id = 0) const int SCREEN_WIDTH = 1;
 layout(constant_id = 1) const int SCREEN_HEIGT = 1;
 const Ivec2T SCREEN_DIM = Ivec2T(SCREEN_WIDTH, SCREEN_HEIGT);
 
-
 layout(std430, binding = 0) uniform UniformBufferObject {
-    mat4 models[2];
+    mat4 models[3];
     mat4 view;
     mat4 proj;
     
