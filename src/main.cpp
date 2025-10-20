@@ -52,6 +52,8 @@
 #endif
 #endif
 
+#include <string>
+
 static GameWindow* gWindow = nullptr;
 static GameScreen* gScreen = nullptr;
 static GameCamera* gCamera = nullptr;
@@ -90,12 +92,15 @@ static std::vector<Quad*> quads;
 static std::vector<Grid*> grids;
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
+	SDL_SetLogPriority(SDL_LOG_CATEGORY_INPUT, SDL_LOG_PRIORITY_CRITICAL);
     gWindow = new GameWindow(1280, 720, "Cross-Platform GUI");
     gScreen = new GameScreen(gWindow->dimension.x, gWindow->dimension.y, gWindow->renderer);
-	gCamera = new GameCamera(60.0f, gWindow->dimension.x / static_cast<float>(gWindow->dimension.y), 0.1f, 100.0f);
+	gCamera = new GameCameraPerspective(60.0f, gWindow->dimension.x / static_cast<float>(gWindow->dimension.y));
+	int zoomLeveru = 256;
+	gCamera = new GameCameraOrthographic(gWindow->dimension.x / static_cast<float>(gWindow->dimension.y));
 	gInput = new GameInput();
     gTimer = new GameTimer();
-	gCamera->SetPosition(glm::vec3(2., 2., -2.));
+	gCamera->SetPosition(glm::vec3(0., 0., 0.));
 #ifdef USE_GPU
 	std::vector<const char*> requestingInstanceExtensions = {
 	VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
@@ -148,9 +153,9 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 	cmdX = new VulkanCommand(deviceX->logicalDevice, queueX->queueFamilyIndex, (uint32_t) swapChainX->swapChainImages.size());
 	syncX = new VulkanSynchronization(deviceX->logicalDevice);
 	//geos.push_back(new Quad(2.f, 2.f));
-	geos.push_back(new Box(1.7f, 1.7f, 1.7f));
 	geos.push_back(new Box(1.7f, 1.7f, 1.7f) );
-	geos.push_back(new Quad(2.f, 2.f));
+	geos.push_back(new Box(1.7f, 1.7f, 1.7f) );
+	geos.push_back(new Quad(1.f, 1.f) );
 	/* <Instantiate descriptorList>
 	* descriptorList: [ uniformBuffer | Box 0 Vertex Buffer | Box 0 Index Buffer | Box 1 Vertex Buffer | Box 1 Index Buffer | ... ]
 	*/
@@ -170,34 +175,42 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 	for (int i = 1; i < descriptorList.size(); i++) {
 		((VulkanDescBuffer*)descriptorList[i])->allocate(deviceX->logicalDevice, physicalDeviceX->physicalDevice, cmdX->cmdPool, queueX->queue);
 	}
-	
-	VulkanSpecializationConstant* specialConstantX = new VulkanSpecializationConstant(
-		gScreen->dimension.x,
-		gScreen->dimension.y
-	);
 
 	VulkanUberDescriptorSet* descriptorX = new VulkanUberDescriptorSet(deviceX->logicalDevice, descriptorList);
 	
+	std::vector<VulkanGraphicsPipeline*> graphicsPipelines;
+
 	/* <Initialize graphics pipelines> such that each Geometry runs a different shader
 	*/
-	std::vector<VulkanGraphicsPipeline*> graphicsPipelines;
-	graphicsPipelines.push_back(new VulkanGraphicsPipeline(physicalDeviceX->physicalDevice, deviceX->logicalDevice,
-		swapChainX, swapChainX->selectedSurfaceFormat,
-		descriptorX->uberPipelineLayout, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, geos[0],
-		specialConstantX->specializationInfo,
-		"box.vert.spv", "box.frag.spv"));
+	std::string base_name = "box";
+	std::string suffixFrag = ".frag.spv";
+	std::string suffixVert = ".vert.spv";
 
-	graphicsPipelines.push_back(new VulkanGraphicsPipeline(physicalDeviceX->physicalDevice, deviceX->logicalDevice,
-		swapChainX, swapChainX->selectedSurfaceFormat,
-		descriptorX->uberPipelineLayout, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, geos[1],
-		specialConstantX->specializationInfo,
-		"box1.vert.spv", "box1.frag.spv"));
+	// Loop from 0 to 2 (or any number of files you need)
+	for (int i = 0; i < geos.size(); i++) {
 
-	graphicsPipelines.push_back(new VulkanGraphicsPipeline(physicalDeviceX->physicalDevice, deviceX->logicalDevice,
-		swapChainX, swapChainX->selectedSurfaceFormat,
-		descriptorX->uberPipelineLayout, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, geos[2],
-		specialConstantX->specializationInfo,
-		"box2.vert.spv", "box2.frag.spv"));
+		VulkanSpecializationConstant* specialConstantX = new VulkanSpecializationConstant(
+			gScreen->dimension.x,
+			gScreen->dimension.y,
+			i
+		);
+
+		// 1. Convert the integer to a string.
+		std::string number_str = std::to_string(i);
+
+		// 2. Concatenate the parts to form the full fragfilename.
+		std::string fragfilename = base_name + number_str + suffixFrag;
+		std::string vertfilename = base_name + number_str + suffixVert;
+
+		// 3. Output the result (or use it to load the file)
+		std::cout << "Generated fragfilename: " << fragfilename << std::endl;
+
+		graphicsPipelines.push_back(new VulkanGraphicsPipeline(physicalDeviceX->physicalDevice, deviceX->logicalDevice,
+			swapChainX, swapChainX->selectedSurfaceFormat,
+			descriptorX->uberPipelineLayout, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST, geos[i],
+			specialConstantX->specializationInfo,
+			"box0.vert.spv", fragfilename));
+	}
 
 	/*	<Initialize vertex buffer>
 	*	<Initialize index buffer>
@@ -255,7 +268,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 		geos[2]->getPosition(),    // Point the "Camera" is looking at
 		worldUp          // World's up direction
 	);
-	geos[2]->setRotation(glm::vec3(0., 3.14, 0.));
+	geos[2]->setRotation(glm::vec3(0., 0., 0.));
 
 
 #ifdef USE_GPU

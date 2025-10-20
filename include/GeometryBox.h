@@ -6,6 +6,8 @@ class Box : public Geometry {
 public:
     Box(float width, float height, float depth);
 
+    Geometry::GEOTYPE getGeoType() const override;
+
     const void* getVertexData() const override;
     uint32_t getVertexCount() const override;
     uint16_t getVertexStride() const override;

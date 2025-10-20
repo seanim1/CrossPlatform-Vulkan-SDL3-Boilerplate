@@ -10,7 +10,7 @@ void GameInput::ProcessEvent(const SDL_Event& event) {
     switch (event.type) {
     case SDL_EVENT_KEY_DOWN:
         keys[event.key.scancode] = true;
-        SDL_Log("Key pressed: %s", SDL_GetScancodeName(event.key.scancode));
+        SDL_LogVerbose(SDL_LOG_CATEGORY_INPUT, "Key pressed: %s", SDL_GetScancodeName(event.key.scancode));
         break;
 
     case SDL_EVENT_KEY_UP:
@@ -47,11 +47,25 @@ void GameInput::ProcessEvent(const SDL_Event& event) {
 void GameInput::Update(GameCamera* gCamera) {
     mouseWheel = 0; // Reset wheel delta every frame
 
+    glm::vec3 delta_pos(0.0f);
     // Example of checking if a specific key is held down
-    if (keys[SDL_SCANCODE_W]) SDL_Log("Holding W");
-    if (keys[SDL_SCANCODE_A]) SDL_Log("Holding A");
-    if (keys[SDL_SCANCODE_S]) SDL_Log("Holding S");
-    if (keys[SDL_SCANCODE_D]) SDL_Log("Holding D");
+    if (keys[SDL_SCANCODE_W]) {
+        SDL_LogVerbose(SDL_LOG_CATEGORY_INPUT, "Holding W");
+        delta_pos.z += 0.1f;
+    }
+    if (keys[SDL_SCANCODE_A]) {
+        SDL_LogVerbose(SDL_LOG_CATEGORY_INPUT, "Holding A");
+        delta_pos.x -= 0.1f;
+    }
+    if (keys[SDL_SCANCODE_S]) {
+        SDL_LogVerbose(SDL_LOG_CATEGORY_INPUT, "Holding S");
+        delta_pos.z -= 0.1f;
+    }
+    if (keys[SDL_SCANCODE_D]) {
+        SDL_LogVerbose(SDL_LOG_CATEGORY_INPUT, "Holding D");
+        delta_pos.x += 0.1f;
+    }
+    gCamera->SetPosition(gCamera->GetPosition() + delta_pos);
 }
 
 bool GameInput::IsKeyPressed(SDL_Scancode key) const {

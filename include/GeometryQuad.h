@@ -6,6 +6,8 @@ class Quad : public Geometry {
 public:
     Quad(float width, float height);
 
+    Geometry::GEOTYPE getGeoType() const override;
+
     const void* getVertexData() const override;
     uint32_t getVertexCount() const override;
     uint16_t getVertexStride() const override;

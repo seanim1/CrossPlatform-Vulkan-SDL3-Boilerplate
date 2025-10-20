@@ -30,6 +30,7 @@
 typedef struct GpuConstantData {
 	int Screen_Width;
 	int Screen_Heigt;
+	int model_id;
 } GpuConstantData;
 
 class VulkanSpecializationConstant {
@@ -37,7 +38,8 @@ private:
 public:
 	VulkanSpecializationConstant(
 		int Screen_Width,
-		int Screen_Heigt
+		int Screen_Heigt,
+		int model_id
 	);
 	static constexpr int specialization_constant_count = (sizeof(GpuConstantData) / 4);  // static, same across all instances
 	VkSpecializationMapEntry specializationMapEntries[specialization_constant_count]{};

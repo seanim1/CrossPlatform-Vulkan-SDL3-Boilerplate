@@ -3,11 +3,13 @@
 
 VulkanSpecializationConstant::VulkanSpecializationConstant(
 	int Screen_Width,
-	int Screen_Heigt
+	int Screen_Heigt,
+	int model_id
 )
 {
 	gpuConstantData.Screen_Width = Screen_Width;
 	gpuConstantData.Screen_Heigt = Screen_Heigt;
+	gpuConstantData.model_id = model_id;
 	// Specialization Constant (Compile-time Constant used for compiler optimization) 
 	// The constant_id can only be applied to a scalar *int*, a scalar *float* or a scalar * bool*
 	// Map constant IDs to offsets in the buffer

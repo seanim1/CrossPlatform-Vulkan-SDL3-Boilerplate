@@ -66,6 +66,11 @@ void Quad::buildQuad(float width, float height) {
 
 // -- Interface Implementations --
 
+Geometry::GEOTYPE Quad::getGeoType() const
+{
+    return GEOTYPE::QUAD;
+}
+
 const void* Quad::getVertexData() const {
     return vertices.data();
 }

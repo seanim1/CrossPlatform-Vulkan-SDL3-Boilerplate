@@ -65,7 +65,7 @@ void main() {
     // Inverse matrices
     mat4 invView = inverse(ubo.view);
     mat4 invProj = inverse(ubo.proj);
-    mat4 invModel = inverse(ubo.models[0]);
+    mat4 invModel = inverse(ubo.models[MODEL_ID]);
 
     // Reconstruct ray in world space
     vec2 uv = gl_FragCoord.xy / SCREEN_DIM;
@@ -93,7 +93,7 @@ void main() {
     //    //vec3 p = localRayOrigin + t * localRayDir;
 //
     //    // Transform the point into the object's local space inside the SDF
-    //    vec3 localP = (inverse(ubo.models[0]) * vec4(p, 1.0)).xyz;
+    //    vec3 localP = (inverse(ubo.models[MODEL_ID]) * vec4(p, 1.0)).xyz;
     //    float d = sdTorus(localP, vec2(0.6, 0.09)); // Torus in local space
     //    if (d < 0.0001) {
     //        hit = true;

@@ -10,10 +10,17 @@ struct Vertex {
     float hue;
     //glm::vec3 normal; // I would need 24 vertices instead of just 8 if I wanted a flat shaded cube
 };
-
 class Geometry : public Transformation {
 public:
+    enum GEOTYPE {
+        QUAD,
+        BOX
+    };
+
     virtual ~Geometry() = default;
+
+    // Pure Virtual Function
+    virtual GEOTYPE getGeoType() const = 0;
 
     virtual const void* getVertexData() const = 0;
     virtual uint32_t getVertexCount() const = 0;

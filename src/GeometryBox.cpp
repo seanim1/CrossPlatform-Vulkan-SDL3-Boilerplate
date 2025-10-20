@@ -82,6 +82,11 @@ void Box::buildBox(float width, float height, float depth) {
 
 // -- Interface Implementations --
 
+Geometry::GEOTYPE Box::getGeoType() const
+{
+    return Geometry::GEOTYPE();
+}
+
 const void* Box::getVertexData() const {
     return vertices.data();
 }
