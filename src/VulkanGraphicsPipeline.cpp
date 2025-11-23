@@ -167,8 +167,8 @@ VulkanGraphicsPipeline::VulkanGraphicsPipeline(VkPhysicalDevice physicalDevice, 
 	// Extract the root folder
 	std::string rootDir = srcDir.substr(0, pos);
 	// Load shader binary. Very much platform or development environment dependent
-	auto vertShaderCode = readFile(rootDir + "/shaderBinary/" + vertShaderFile);
-	auto fragShaderCode = readFile(rootDir + "/shaderBinary/" + fragShaderFile);
+	auto vertShaderCode = readFile(rootDir + "/shadersBin/" + vertShaderFile);
+	auto fragShaderCode = readFile(rootDir + "/shadersBin/" + fragShaderFile);
 #endif
 
 
