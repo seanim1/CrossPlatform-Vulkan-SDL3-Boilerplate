@@ -56,6 +56,12 @@
 
 #include <string>
 
+#include "imgui.h"
+#include "imgui_impl_sdl3.h"
+#include "imgui_impl_vulkan.h"
+#include <stdio.h>          // printf, fprintf
+#include <stdlib.h>         // abort
+
 static GameWindow* gWindow = nullptr;
 static GameScreen* gScreen = nullptr;
 static GameCamera* gCamera = nullptr;
@@ -101,7 +107,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 	//gCamera = new GameCameraOrthographic(gWindow->dimension.x / static_cast<float>(gWindow->dimension.y));
 	gInput = new GameInput();
     gTimer = new GameTimer();
-	
+
 #ifdef USE_GPU
 	std::vector<const char*> requestingInstanceExtensions = {
 	VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
@@ -253,6 +259,28 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 	geos[1]->setPosition(glm::vec3(0., 0., 0.));
 	geos[2]->setPosition(glm::vec3(-quad_size * 1.1f, 0., 0.));
 
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui::StyleColorsDark(); // or Light
+
+	ImGui_ImplSDL3_InitForVulkan(gWindow->window);
+
+	ImGui_ImplVulkan_InitInfo init_info = {};
+	init_info.Instance = instanceX->instance;
+	//init_info.PhysicalDevice = g_PhysicalDevice;
+	//init_info.Device = g_Device;
+	//init_info.QueueFamily = g_QueueFamily;
+	//init_info.Queue = g_Queue;
+	//init_info.DescriptorPool = g_DescriptorPool;
+	//init_info.MinImageCount = g_MinImageCount;
+	//init_info.ImageCount = swapchain_image_count;
+	//init_info.Allocator = nullptr;
+	//init_info.CheckVkResultFn = check_vk_result;
+	//
+	//ImGui_ImplVulkan_Init(&init_info);
+
+
     return SDL_APP_CONTINUE; // SDL_APP_FAILURE to indicate failure
 }
 
@@ -277,7 +305,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 	}
 	if (keys[SDL_SCANCODE_A]) {
 		SDL_LogVerbose(SDL_LOG_CATEGORY_INPUT, "Holding A");
-		delta_pos.x += 0.1f;
+		delta_pos.x -= 0.1f;
 	}
 	if (keys[SDL_SCANCODE_S]) {
 		SDL_LogVerbose(SDL_LOG_CATEGORY_INPUT, "Holding S");
@@ -285,15 +313,15 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 	}
 	if (keys[SDL_SCANCODE_D]) {
 		SDL_LogVerbose(SDL_LOG_CATEGORY_INPUT, "Holding D");
-		delta_pos.x -= 0.1f;
+		delta_pos.x += 0.1f;
 	}
 	if (keys[SDL_SCANCODE_Q]) {
 		SDL_LogVerbose(SDL_LOG_CATEGORY_INPUT, "Holding Q");
-		delta_pos.y -= 0.1f;
+		delta_pos.y += 0.1f;
 	}
 	if (keys[SDL_SCANCODE_E]) {
 		SDL_LogVerbose(SDL_LOG_CATEGORY_INPUT, "Holding E");
-		delta_pos.y += 0.1f;
+		delta_pos.y -= 0.1f;
 	}
 	gCamera->SetPosition(gCamera->GetPosition() + delta_pos);
 	SDL_Log("cameraPos: %s", glm::to_string(gCamera->GetPosition()).c_str());

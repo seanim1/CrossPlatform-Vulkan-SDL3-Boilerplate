@@ -58,6 +58,24 @@ add_executable(EXECUTABLE_TARGET_NAME ${SOURCES})
 # Link SDL3 and Vulkan with your project
 target_link_libraries(EXECUTABLE_TARGET_NAME SDL3::SDL3 ${Vulkan_LIBRARIES})
 
+file(GLOB IMGUI_SOURCES
+    thirdparty/imgui/imgui.cpp
+    thirdparty/imgui/imgui_draw.cpp
+    thirdparty/imgui/imgui_widgets.cpp
+    thirdparty/imgui/imgui_tables.cpp
+    thirdparty/imgui/imgui_demo.cpp
+    thirdparty/imgui/backends/imgui_impl_vulkan.cpp
+    thirdparty/imgui/backends/imgui_impl_sdl3.cpp
+)
+
+target_sources(EXECUTABLE_TARGET_NAME PRIVATE ${IMGUI_SOURCES})
+
+target_include_directories(EXECUTABLE_TARGET_NAME PRIVATE
+    ${CMAKE_SOURCE_DIR}/thirdparty/glm
+    ${CMAKE_SOURCE_DIR}/thirdparty/imgui
+    ${CMAKE_SOURCE_DIR}/thirdparty/imgui/backends
+)
+
 # Only add post-build commands after the target is created
 if(WIN32)
     # Post-build command to copy the DLL to the executable directory

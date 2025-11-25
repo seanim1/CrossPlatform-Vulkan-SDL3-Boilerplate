@@ -9,12 +9,14 @@
 !include/
 !shaders/
 !shaderBinary/
+!thirdparty/
 
 # Allow contents inside src and include
 !src/**
 !include/**
 !shaders/**
 !shaderBinary/**
+!thirdparty/**
 
 # don't ignore the .gitignore!
 !.gitignore
